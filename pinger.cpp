@@ -12,6 +12,6 @@ using namespace std;
 int main(int argc, char** argv)
 {
     PacketSender sender;
-    IP pkt = IP("192.168.0.1") / TCP(22) / RawPDU("foo");
+    IP pkt = IP("192.168.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
     sender.send(pkt);
 }
