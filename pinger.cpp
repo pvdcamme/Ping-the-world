@@ -1,9 +1,8 @@
+/**  Pings the whole IPv4 address space.
+  *  This program is a work in progress.
+  */
 #include <iostream>
 #include <tins/tins.h>
-#include <string>
-#include <tuple>
-#include <vector>
-#include <algorithm>
 
 using namespace Tins;
 using namespace std;
