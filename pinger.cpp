@@ -14,7 +14,9 @@ using std::endl;
 using namespace Tins;
 
 
-
+/**  Catches all ICMP packts.
+  *  This class is intended to process the actual packets.
+  */
 class ICMPCatcher
 {
     Sniffer sniffer;
@@ -23,9 +25,6 @@ public:
     ICMPCatcher():
         sniffer("wlp2s0", 2048, true)
     {
-        //SnifferConfiguration config;
-        //config.set_promisc_mode(true);
-        //this.sniffer = Sniffer("wlp2s0",config) ;
         this->sniffer.set_timeout(1);
 
         cout << "Go for thread" << endl;
@@ -33,10 +32,10 @@ public:
             cout << "Let's start capturing" << endl;
             this->sniffer.sniff_loop(std::bind(&ICMPCatcher::handle, this, std::placeholders::_1));
         });
-
     }
 
     ~ICMPCatcher() {
+        sniffer.stop_sniff();
         thread_.join();
     }
 
