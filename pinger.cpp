@@ -29,11 +29,9 @@ public:
         sniffer("wlp2s0", MAX_PACKET_SIZE, PROMISCUOUS)
     {
         this->sniffer.set_timeout(1);
-
-        cout << "Go for thread" << endl;
         thread_ = std::thread( [&]() {
-            cout << "Let's start capturing" << endl;
-            this->sniffer.sniff_loop(std::bind(&ICMPCatcher::handle, this, std::placeholders::_1));
+            auto member_callback = std::bind(&ICMPCatcher::handle, this, std::placeholders::_1);
+            this->sniffer.sniff_loop(member_callback);
         });
     }
 
