@@ -19,11 +19,14 @@ using namespace Tins;
   */
 class ICMPCatcher
 {
+    const size_t MAX_PACKET_SIZE =2048;
+    const bool PROMISCUOUS = true;
+
     Sniffer sniffer;
     std::thread thread_;
 public:
     ICMPCatcher():
-        sniffer("wlp2s0", 2048, true)
+        sniffer("wlp2s0", MAX_PACKET_SIZE, PROMISCUOUS)
     {
         this->sniffer.set_timeout(1);
 
