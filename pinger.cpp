@@ -40,19 +40,25 @@ public:
         thread_.join();
     }
 
-    bool handle(PDU& p) {
-        cout << "Got a pakcet" << endl;
-        return false;
+    bool handle(const Packet& pkt) {
+        const PDU* pdu = pkt.pdu();
+        const ICMP& icmp = pdu->rfind_pdu<ICMP>();
+        const Timestamp when = pkt.timestamp();
+
+        cout << "Got an ICMP packet of type: " << icmp.type() << 
+           " at " << when.seconds() << "::" << when.microseconds() << endl;
+        return true;
     }
 };
 
 int main(int argc, char** argv)
 {
+    ICMPCatcher cc;
+
     PacketSender sender;
     IP pkt = IP("192.168.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
     sender.send(pkt);
 
-    ICMPCatcher cc;
     usleep(1000000);
-    cout << "Time for sleep" << endl;
+    return 0;
 }
