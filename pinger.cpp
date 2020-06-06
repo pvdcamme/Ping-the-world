@@ -18,6 +18,7 @@
 #include <iostream>
 #include <functional>
 #include <thread>
+#include <string>
 
 #include <unistd.h>
 #include <tins/tins.h>
@@ -38,6 +39,9 @@ class ICMPCatcher
 
     Sniffer sniffer;
     std::thread thread_;
+    uint64_t nPingRequest;
+    uint64_t nPingReply;
+
 
     /** Sends a dummy ping.
       * Unfortunately useful to stop ICMPCatcher.
@@ -45,13 +49,14 @@ class ICMPCatcher
       */
     void sendDummyPing(){
         PacketSender sender;
-        IP pkt = IP("192.168.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
+        IP pkt = IP("127.0.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
         sender.send(pkt);
 
     }
 public:
     ICMPCatcher(const std::string& device):
-        sniffer(device, MAX_PACKET_SIZE, PROMISCUOUS, "icmp")
+        sniffer(device, MAX_PACKET_SIZE, PROMISCUOUS, "icmp"),
+        nPingRequest(0), nPingReply(0)
     {
         this->sniffer.set_timeout(1);
         thread_ = std::thread( [&]() {
@@ -68,25 +73,51 @@ public:
         thread_.join();
     }
 
+    uint64_t requests(){
+        return nPingRequest;
+    }
+
+    uint64_t replies(){
+        return nPingReply;
+    }
+
     bool handle(const Packet& pkt) {
         const PDU* pdu = pkt.pdu();
         const ICMP& icmp = pdu->rfind_pdu<ICMP>();
-        const Timestamp when = pkt.timestamp();
+        const RawPDU& raw= icmp.rfind_pdu<RawPDU>();
+        //const Timestamp when = pkt.timestamp();
+        auto type = icmp.type();
+        if(ICMP::ECHO_REQUEST == type){
+            nPingRequest++;
+        }else if(ICMP::ECHO_REPLY == type){
+            nPingReply++;
+        }
 
-        cout << "Got an ICMP packet of type: " << icmp.type() << 
-           " at " << when.seconds() << "::" << when.microseconds() << endl;
+        auto pp = raw.payload();
+        cout << std::string(pp.begin(), pp.end()) << endl;
+
         return true;
     }
 };
 
 int main(int argc, char** argv)
 {
-    ICMPCatcher pingReplies("wlp2s0");
+    ICMPCatcher pingTracer("lo");
 
-    PacketSender sender;
-    IP pkt = IP("192.168.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
-    sender.send(pkt);
+    usleep(1000);
 
-    usleep(1000000);
+    PacketSender sender("lo");
+    IPv4Range range = IPv4Address("127.0.1.0") / 20;
+
+    uint64_t pcks_send = 0;
+    for(const auto& local_addr: range){
+        IP pkt= IP(local_addr, "127.0.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
+        sender.send(pkt);
+        pcks_send++;
+    }        
+    usleep(1000);
+    cout << "Total send: " << pcks_send << endl;
+    cout << "requests: " << pingTracer.requests() << endl;
+    cout << "replies: " << pingTracer.replies() << endl;
     return 0;
 }
