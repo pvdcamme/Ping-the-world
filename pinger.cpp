@@ -102,17 +102,22 @@ public:
 
 int main(int argc, char** argv)
 {
-    ICMPCatcher pingTracer("lo");
+    const std::string netif("lo");
+    ICMPCatcher pingTracer(netif);
 
-    usleep(1000);
+    usleep(100000);
 
-    PacketSender sender("lo");
+    PacketSender sender(netif);
     IPv4Range range = IPv4Address("127.0.1.0") / 20;
 
     uint64_t pcks_send = 0;
     for(const auto& local_addr: range){
         IP pkt= IP(local_addr, "127.0.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
-        sender.send(pkt);
+        try{
+            sender.send(pkt);
+        } catch(socket_write_error){
+            //ignore
+        }
         pcks_send++;
     }        
     usleep(1000);
