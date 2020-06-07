@@ -9,10 +9,11 @@
 #include <tins/tins.h>
 
 #include "time_util.h"
+#include "ping_matcher.h"
 
 using namespace Tins;
 
-/* Test utility method.
+/* Test utility function, are the floating point values nearly the same.
  */
 bool about_same(double a, double b){
     double diff = a - b;
@@ -21,7 +22,6 @@ bool about_same(double a, double b){
 }
 
 /* Test utility to make creating timestamps easier
- * 
  */
 
 Timestamp create_timestamp(uint64_t sec, uint64_t microsec){
@@ -65,11 +65,86 @@ void test_time_diff_same_is_zero(){
     double calc_diff = time_diff(a_stamp, a_stamp);
     assert(about_same(calc_diff, 0));
 }
+
+void test_ping_matcher_normal_single_ping(){
+    PingMatcher p;
+    uint32_t addr = IPv4Address("127.0.0.1");
+
+    p.addRequest(Timestamp::current_time(), addr);
+    p.addReply(Timestamp::current_time(), addr);
+
+    auto replies = p.replies();
+    assert(replies.size() == 1);
+    assert(replies[0].destination == addr);
+}
+
+void test_ping_matcher_no_response_single_ping(){
+    PingMatcher p;
+    uint32_t addr = IPv4Address("127.0.0.1");
+
+    p.addRequest(Timestamp::current_time(), addr);
+
+    auto replies = p.replies();
+    assert(replies.size() == 0);
+}
+
+void test_ping_matcher_timeout_single_ping(){
+    PingMatcher p(1000000);
+    uint32_t addr = IPv4Address("127.0.0.1");
+    Timestamp request_time = create_timestamp(1235,124);
+    Timestamp reply_time = create_timestamp(1236,424);
+
+    p.addRequest(request_time, addr);
+    p.addReply(reply_time, addr);
+
+    auto replies = p.replies();
+    assert(replies.size() == 0);
+}
+
+void test_ping_matcher_reply_without_request(){
+    PingMatcher p(1000000);
+    uint32_t addr = IPv4Address("127.0.0.1");
+
+    p.addReply(Timestamp::current_time(), addr);
+
+    auto replies = p.replies();
+    assert(replies.size() == 0);
+}
+
+
+void test_ping_matcher_multiple_normal(){
+    PingMatcher p(1000000);
+    auto addr_range = IPv4Address("127.0.0.1") /16;
+    size_t n_replies = 0;
+
+    for(auto local: addr_range){
+        p.addRequest(Timestamp::current_time(), local);
+    }
+
+    for(auto local: addr_range){
+        p.addReply(Timestamp::current_time(), local);
+        n_replies++;
+    }
+
+    auto replies = p.replies();
+    cout << "Received " << replies.size() << " -- expected: " << n_replies << endl;
+    assert(replies.size() == n_replies);
+}
+
+
+
+
 int main(){
     test_time_diff_same_is_zero();
     test_time_diff_normal_case_no_wrap();
     test_time_diff_normal_case_with_wrap();
     test_time_diff_reversed();
+    
+    test_ping_matcher_normal_single_ping();
+    test_ping_matcher_no_response_single_ping();
+    test_ping_matcher_timeout_single_ping();
+    test_ping_matcher_reply_without_request();
+    test_ping_matcher_multiple_normal();
 
     std::cout << "All tests pass " << std::endl;
     return 0;

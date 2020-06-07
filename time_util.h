@@ -1,3 +1,6 @@
+/** A small utility to convert libtins timestamps to something
+  *  easier to use.
+  */
 #ifndef TIME_UTIL_H
 #define TIME_UTIL_H
 #include <tins/tins.h>
