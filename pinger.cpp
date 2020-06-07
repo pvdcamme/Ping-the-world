@@ -19,10 +19,11 @@
   *   We assume that the network layer is the bottleneck.
   *   
   */
-#include <iostream>
+#include <algorithm>
 #include <functional>
-#include <thread>
+#include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <unistd.h>
@@ -120,10 +121,19 @@ int main(int argc, char** argv)
     IPv4Range range = IPv4Address("192.168.0.0") / 12;
 
     uint64_t pcks_send = 0;
-    for(const auto& target_addr: range){
-        IP pkt= IP(target_addr, local_addr) / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
+
+    std::vector<IPv4Address> to_ping(range.begin(), range.end());
+    std::random_shuffle(to_ping.begin(), to_ping.end());
+
+    for(const auto& target_addr: to_ping){
+        IP pkt(target_addr, local_addr);
+        ICMP icmp(ICMP::ECHO_REQUEST);
+        RawPDU data("foo");
+
+        icmp.sequence(1 + pcks_send);
         try{
-            sender.send(pkt);
+            IP assembled= pkt / icmp /data;
+            sender.send(assembled);
             usleep(10);
         } catch(socket_write_error){
             //ignore
