@@ -19,9 +19,13 @@
 #include <functional>
 #include <thread>
 #include <string>
+#include <vector>
 
 #include <unistd.h>
 #include <tins/tins.h>
+
+#include "time_util.h"
+#include "ping_matcher.h"
 
 using std::cout;
 using std::endl;
@@ -34,29 +38,28 @@ using namespace Tins;
   */
 class ICMPCatcher
 {
-    const size_t MAX_PACKET_SIZE =2048;
+    const size_t MAX_PACKET_SIZE = 2048;
     const bool PROMISCUOUS = true;
+    const std::string netDevice;
+    PingMatcher pingMatch;
 
     Sniffer sniffer;
     std::thread thread_;
-    uint64_t nPingRequest;
-    uint64_t nPingReply;
-
 
     /** Sends a dummy ping.
       * Unfortunately useful to stop ICMPCatcher.
       * Libpcap+libTins are blocking on new packets.
       */
     void sendDummyPing(){
-        PacketSender sender;
+        PacketSender sender(netDevice);
         IP pkt = IP("127.0.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
         sender.send(pkt);
 
     }
 public:
     ICMPCatcher(const std::string& device):
-        sniffer(device, MAX_PACKET_SIZE, PROMISCUOUS, "icmp"),
-        nPingRequest(0), nPingReply(0)
+        netDevice(device),
+        sniffer(device, MAX_PACKET_SIZE, PROMISCUOUS, "icmp")
     {
         this->sniffer.set_timeout(1);
         thread_ = std::thread( [&]() {
@@ -72,29 +75,26 @@ public:
         sendDummyPing();
         thread_.join();
     }
-
-    uint64_t requests(){
-        return nPingRequest;
-    }
-
-    uint64_t replies(){
-        return nPingReply;
+    std::vector<PingMatcher::Reply> replies(){
+        return pingMatch.replies();
     }
 
     bool handle(const Packet& pkt) {
         const PDU* pdu = pkt.pdu();
-        const ICMP& icmp = pdu->rfind_pdu<ICMP>();
+
+        const IP& ip= pdu->rfind_pdu<IP>();
+        const ICMP& icmp = ip->rfind_pdu<ICMP>();
         const RawPDU& raw= icmp.rfind_pdu<RawPDU>();
-        //const Timestamp when = pkt.timestamp();
+        const Timestamp when = pkt.timestamp();
+
         auto type = icmp.type();
         if(ICMP::ECHO_REQUEST == type){
-            nPingRequest++;
+            pingMatch.addRequest(when, ip.dst_addr());
         }else if(ICMP::ECHO_REPLY == type){
-            nPingReply++;
+            pingMatch.addReply(when, ip.src_addr());
+        }else{
+            //cout << "Received other ICMP: " << type << endl;
         }
-
-        auto pp = raw.payload();
-        cout << std::string(pp.begin(), pp.end()) << endl;
 
         return true;
     }
@@ -122,7 +122,8 @@ int main(int argc, char** argv)
     }        
     usleep(1000);
     cout << "Total send: " << pcks_send << endl;
-    cout << "requests: " << pingTracer.requests() << endl;
-    cout << "replies: " << pingTracer.replies() << endl;
+    for(auto g: pingTracer.replies()){
+        cout << IPv4Address(g.destination) << " :: " << g.duration <<  " s" << endl;
+    }
     return 0;
 }
