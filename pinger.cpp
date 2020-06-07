@@ -1,6 +1,10 @@
 /**  Pings the whole IPv4 address space.
   *  This program is a work in progress.
   *
+  *  Default the program uses localhost.
+  *   but with the first parameter you can select
+  *   which network interface to use.
+  *
   * Basic architecture:
   *   -> Pings are generated from 1 thread.
   *       This thread adds a unique identifier to 
@@ -83,8 +87,7 @@ public:
         const PDU* pdu = pkt.pdu();
 
         const IP& ip= pdu->rfind_pdu<IP>();
-        const ICMP& icmp = ip->rfind_pdu<ICMP>();
-        const RawPDU& raw= icmp.rfind_pdu<RawPDU>();
+        const ICMP& icmp = ip.rfind_pdu<ICMP>();
         const Timestamp when = pkt.timestamp();
 
         auto type = icmp.type();
@@ -102,19 +105,26 @@ public:
 
 int main(int argc, char** argv)
 {
-    const std::string netif("lo");
-    ICMPCatcher pingTracer(netif);
+    std:: string str_netif("lo");
+    if(argc == 2){
+        str_netif = argv[1];
+    }
+    const IPv4Address local_addr = NetworkInterface(str_netif).ipv4_address();
+    cout << "Sending from: " << local_addr << endl;
+
+    ICMPCatcher pingTracer(str_netif);
 
     usleep(100000);
 
-    PacketSender sender(netif);
-    IPv4Range range = IPv4Address("127.0.1.0") / 20;
+    PacketSender sender(str_netif);
+    IPv4Range range = IPv4Address("192.168.0.0") / 12;
 
     uint64_t pcks_send = 0;
-    for(const auto& local_addr: range){
-        IP pkt= IP(local_addr, "127.0.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
+    for(const auto& target_addr: range){
+        IP pkt= IP(target_addr, local_addr) / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
         try{
             sender.send(pkt);
+            usleep(10);
         } catch(socket_write_error){
             //ignore
         }
@@ -122,7 +132,9 @@ int main(int argc, char** argv)
     }        
     usleep(1000);
     cout << "Total send: " << pcks_send << endl;
-    for(auto g: pingTracer.replies()){
+    auto replies = pingTracer.replies();
+    cout << "Received " << replies.size() << " replies" << endl;
+    for(auto g: replies){
         cout << IPv4Address(g.destination) << " :: " << g.duration <<  " s" << endl;
     }
     return 0;
