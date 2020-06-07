@@ -12,10 +12,23 @@
 
 using namespace Tins;
 
+/* Test utility method.
+ */
 bool about_same(double a, double b){
     double diff = a - b;
     double delta = 1e-9;
     return -delta < diff && diff < delta;
+}
+
+/* Test utility to make creating timestamps easier
+ * 
+ */
+
+Timestamp create_timestamp(uint64_t sec, uint64_t microsec){
+    timeval tv;
+    tv.tv_sec= sec;
+    tv.tv_usec = microsec;
+    return Timestamp(tv);
 }
 
 
@@ -28,30 +41,21 @@ void test_time_diff_reversed(){
 }
 
 void test_time_diff_normal_case_with_wrap(){
-    timeval tv_older;
-    tv_older.tv_sec= 32124;
-    tv_older.tv_usec = 999999 ;
+    Timestamp older = create_timestamp(32124, 999999);
+    Timestamp younger  = create_timestamp(32125, 1);
 
-    timeval tv_younger;
-    tv_younger.tv_sec= 32125;
-    tv_younger.tv_usec = 1;
-
-    double calc_diff = time_diff(Timestamp(tv_younger), Timestamp(tv_older));
+    double calc_diff = time_diff(younger, older);
     assert(about_same(calc_diff, 2e-6));
 }
 
 void test_time_diff_normal_case_no_wrap(){
     double extra = 300;
     double micosec = 1e-6;
-    timeval tv_older;
-    tv_older.tv_sec= 31245;
-    tv_older.tv_usec = 321;
 
-    timeval tv_younger;
-    tv_younger.tv_sec= 31245;
-    tv_younger.tv_usec = 321 + extra;
+    Timestamp older = create_timestamp(3135, 3121);
+    Timestamp younger= create_timestamp(3135, 3121 + extra);
 
-    double calc_diff = time_diff(Timestamp(tv_younger), Timestamp(tv_older));
+    double calc_diff = time_diff(younger, older);
     assert(about_same(calc_diff, extra * micosec));
 }
 
