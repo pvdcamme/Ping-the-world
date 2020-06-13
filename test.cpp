@@ -5,10 +5,16 @@
 #include <cassert>
 #include <iostream>
 #include <unistd.h>
+#include <bitset>
+#include <vector>
+#include <limits>
+#include <algorithm>
+
 
 #include <tins/tins.h>
 
 #include "time_util.h"
+#include "ipv4_util.h"
 #include "ping_matcher.h"
 
 using namespace Tins;
@@ -114,15 +120,19 @@ void test_ping_matcher_reply_without_request(){
 
 void test_ping_matcher_multiple_normal(){
     PingMatcher p(1000000);
-    auto addr_range = IPv4Address("127.0.0.1") /16;
+    auto addr_range = IPv4Address("127.0.0.1") /12;
     size_t n_replies = 0;
 
-    for(auto local: addr_range){
-        p.addRequest(Timestamp::current_time(), local);
-    }
+    auto start = Timestamp::current_time();
 
     for(auto local: addr_range){
-        p.addReply(Timestamp::current_time(), local);
+        p.addRequest(start, local);
+    }
+
+    auto response = Timestamp::current_time();
+
+    for(auto local: addr_range){
+        p.addReply(response, local);
         n_replies++;
     }
 
@@ -131,8 +141,28 @@ void test_ping_matcher_multiple_normal(){
     assert(replies.size() == n_replies);
 }
 
+void test_ipv4_random(){
+    std::vector<uint8_t>seen_addr(std::numeric_limits<uint32_t>::max());
 
+    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](uint8_t v) { return !v; }));
 
+    for(uint64_t local(0); local < (uint64_t(1) << 32) ; ++local){
+        auto orig_addr = IPv4Address(local);
+        seen_addr[orig_addr] += 1;//true;
+
+        IPv4Address new_addr = random(orig_addr);
+        seen_addr[new_addr] += 1;//true;
+    }
+
+    /*
+    for(uint64_t local(0); local < (uint64_t(1) << 32) ; ++local){
+        IPv4Address new_addr = random(IPv4Address(local));
+        assert(seen_addresses[new_addr] == true);
+        seen_addresses[new_addr] = false;
+    } */
+
+    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](uint8_t v) { return v == 0 || v==2; }));
+}
 
 int main(){
     test_time_diff_same_is_zero();
@@ -145,6 +175,8 @@ int main(){
     test_ping_matcher_timeout_single_ping();
     test_ping_matcher_reply_without_request();
     test_ping_matcher_multiple_normal();
+
+    test_ipv4_random();
 
     std::cout << "All tests pass " << std::endl;
     return 0;
