@@ -1,6 +1,6 @@
 SOURCES = pinger.cpp
 OBJS = $(SOURCES:.cpp=.o)
-CXXFLAGS = -Wall -std=c++11 -g 
+CXXFLAGS = -Wall -std=c++11 -g  -O3 -flto
 LDDFLAGS = -ltins -lpthread
 
 .PHONY: test

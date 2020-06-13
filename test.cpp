@@ -142,26 +142,23 @@ void test_ping_matcher_multiple_normal(){
 }
 
 void test_ipv4_random(){
-    std::vector<uint8_t>seen_addr(std::numeric_limits<uint32_t>::max());
+    std::vector<bool>seen_addr(std::numeric_limits<uint32_t>::max());
 
     assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](uint8_t v) { return !v; }));
 
     for(uint64_t local(0); local < (uint64_t(1) << 32) ; ++local){
-        auto orig_addr = IPv4Address(local);
-        seen_addr[orig_addr] += 1;//true;
-
-        IPv4Address new_addr = random(orig_addr);
-        seen_addr[new_addr] += 1;//true;
+        IPv4Address new_addr = IPv4Address(local);
+        seen_addr[new_addr] = true;
     }
 
-    /*
     for(uint64_t local(0); local < (uint64_t(1) << 32) ; ++local){
         IPv4Address new_addr = random(IPv4Address(local));
-        assert(seen_addresses[new_addr] == true);
-        seen_addresses[new_addr] = false;
-    } */
+        uint32_t new_spot(new_addr);
+        assert(seen_addr[new_spot] == true);
+        seen_addr[new_spot] = false;
+    }
 
-    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](uint8_t v) { return v == 0 || v==2; }));
+    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](bool v) { return !v; }));
 }
 
 int main(){
