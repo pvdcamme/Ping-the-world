@@ -2,6 +2,7 @@
 #define PING_MATCHER_H
 #include <vector>
 #include <map>
+#include <list>
 
 #include <unistd.h>
 #include <tins/tins.h>
