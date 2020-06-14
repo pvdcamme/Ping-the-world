@@ -45,10 +45,8 @@ private:
         auto first_good = requests.begin();
         while(first_good != requests.end() && 
               time_diff(now, first_good->start) >= timeout_us_ * 1e-6){
+            address_to_request.erase(first_good->destination);
             first_good++;
-        }
-        for(auto it = requests.begin(); it != first_good;++it){
-            address_to_request.erase(it->destination);
         }
         requests.erase(requests.begin(), first_good);
     }
@@ -71,10 +69,10 @@ public:
        cleanup(now);
        auto address_search = address_to_request.find(dest);
        if(address_search != address_to_request.end()){
-               Reply reply;
-               reply.destination = dest;
-               reply.duration = time_diff(now, address_search->second.start);
-               matches.push_back(reply);
+           Reply reply;
+           reply.destination = dest;
+           reply.duration = time_diff(now, address_search->second.start);
+           matches.push_back(reply);
        }
    }
 
