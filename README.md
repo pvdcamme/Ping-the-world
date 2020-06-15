@@ -12,3 +12,11 @@ In addition, this pinger did run on a raspberry Pi, low-power but slightly
 unreliable platform, at least how mine is powered. As such the pinger works
 in 'small chunks' each time.
 
+
+
+Programs
+---
+
+ ./pinger <start addrress> <amount of hosts to ping>
+ ./test: no arguments runs the test-code. Best run on a slightly faster machine than raspberry pi.
+
