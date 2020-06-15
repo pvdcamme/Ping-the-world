@@ -25,10 +25,12 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <sstream>
 
 #include <unistd.h>
 #include <tins/tins.h>
 
+#include "ipv4_util.h"
 #include "time_util.h"
 #include "ping_matcher.h"
 
@@ -106,10 +108,22 @@ public:
 
 int main(int argc, char** argv)
 {
-    std:: string str_netif("lo");
-    if(argc == 2){
+    std::string str_netif("lo");
+    uint64_t address_test_count = 1000000;
+    IPv4Address start_address("0.0.0.0");
+    if(argc >= 2){
         str_netif = argv[1];
     }
+
+    if(argc >= 3){
+        start_address = IPv4Address(argv[2]);
+    }
+
+    if(argc >= 4){
+        std::stringstream in_val(argv[3]);
+        in_val >> address_test_count;
+    }
+
     const IPv4Address local_addr = NetworkInterface(str_netif).ipv4_address();
     cout << "Sending from: " << local_addr << endl;
 
@@ -118,15 +132,14 @@ int main(int argc, char** argv)
     usleep(100000);
 
     PacketSender sender(str_netif);
-    IPv4Range range = IPv4Address("192.168.0.0") / 12;
-
     uint64_t pcks_send = 0;
 
-    std::vector<IPv4Address> to_ping(range.begin(), range.end());
-    std::random_shuffle(to_ping.begin(), to_ping.end());
+    for(const auto& target_addr: start_address / 0){
+        if(pcks_send == 0){
+            cout << "First address: " <<  target_addr << endl;
+        }
 
-    for(const auto& target_addr: to_ping){
-        IP pkt(target_addr, local_addr);
+        IP pkt(random(target_addr), local_addr);
         ICMP icmp(ICMP::ECHO_REQUEST);
         RawPDU data("foo");
 
@@ -134,18 +147,24 @@ int main(int argc, char** argv)
         try{
             IP assembled= pkt / icmp /data;
             sender.send(assembled);
-            usleep(10);
+            usleep(1000);
         } catch(socket_write_error){
             //ignore
         }
+
         pcks_send++;
+        if(pcks_send == address_test_count){
+            cout << "Last address: " <<  target_addr << endl;
+            break;
+        }
     }        
-    usleep(1000);
+
+    usleep(1000000);
     cout << "Total send: " << pcks_send << endl;
     auto replies = pingTracer.replies();
     cout << "Received " << replies.size() << " replies" << endl;
     for(auto g: replies){
-        cout << IPv4Address(g.destination) << " :: " << g.duration <<  " s" << endl;
+        cout << "rx: " << IPv4Address(g.destination) << " : " << g.duration <<  " s" << endl;
     }
     return 0;
 }
