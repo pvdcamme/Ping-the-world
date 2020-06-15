@@ -17,6 +17,6 @@ in 'small chunks' each time.
 Programs
 ---
 
- ./pinger <start addrress> <amount of hosts to ping>
- ./test: no arguments runs the test-code. Best run on a slightly faster machine than raspberry pi.
+- ./pinger <start addrress> <amount of hosts to ping>
+- ./test: no arguments runs the test-code. Best run on a slightly faster machine than raspberry pi.
 
