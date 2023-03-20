@@ -149,8 +149,8 @@ int main(int argc, char** argv)
             IP assembled= pkt / icmp /data;
             sender.send(assembled);
             usleep(1000);
-        } catch(socket_write_error){
-            //ignore
+        } catch(socket_write_error& ){
+          // no interest yet.
         }
 
         pcks_send++;
