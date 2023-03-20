@@ -66,8 +66,9 @@ class ICMPCatcher
 public:
     ICMPCatcher(const std::string& device):
         netDevice(device),
-        sniffer(device, MAX_PACKET_SIZE, PROMISCUOUS, "icmp")
+        sniffer(device)
     {
+        this->sniffer.set_filter("icmp");
         this->sniffer.set_timeout(1);
         thread_ = std::thread( [&]() {
             auto member_callback = std::bind(&ICMPCatcher::handle, this, std::placeholders::_1);
