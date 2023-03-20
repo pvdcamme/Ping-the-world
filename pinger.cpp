@@ -5,6 +5,8 @@
   *   but with the first parameter you can select
   *   which network interface to use.
   *
+  *  This program should run as root.
+  *
   * Basic architecture:
   *   -> Pings are generated from 1 thread.
   *       This thread adds a unique identifier to 
