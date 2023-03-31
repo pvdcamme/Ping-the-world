@@ -7,6 +7,9 @@
   *
   *  This program should run as root.
   *
+  *  Optional Arguments:
+  *       ./pinger <net-if> <start- IPv4 address> <num addresses>
+  *
   * Basic architecture:
   *   -> Pings are generated from 1 thread.
   *       This thread adds a unique identifier to 
