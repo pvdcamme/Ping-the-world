@@ -1,14 +1,15 @@
 /**  Pings the whole IPv4 address space.
   *  This program is a work in progress.
   *
-  *  Default the program uses localhost.
-  *   but with the first parameter you can select
-  *   which network interface to use.
   *
   *  This program should run as root.
   *
   *  Optional Arguments:
   *       ./pinger <net-if> <start- IPv4 address> <num addresses>
+  *
+  *  Default the program uses localhost.
+  *   but with the first parameter you can select
+  *   which network interface to use.
   *
   * Basic architecture:
   *   -> Pings are generated from 1 thread.
@@ -44,6 +45,7 @@ using std::endl;
 
 using namespace Tins;
 
+const double PING_RATE = 10; // a sec
 
 /**  Catches all ICMP packts.
   *  This class is intended to process the actual packets.
@@ -130,12 +132,15 @@ int main(int argc, char** argv)
         in_val >> address_test_count;
     }
 
+    const size_t sleep_between_ping = size_t(1e6/ PING_RATE);
+    const size_t THREADING_WAIT = 10000000;
+
     const IPv4Address local_addr = NetworkInterface(str_netif).ipv4_address();
     cout << "Sending from: " << local_addr << endl;
 
     ICMPCatcher pingTracer(str_netif);
 
-    usleep(100000);
+    usleep(THREADING_WAIT);
 
     PacketSender sender(str_netif);
     uint64_t pcks_send = 0;
@@ -153,7 +158,7 @@ int main(int argc, char** argv)
         try{
             IP assembled= pkt / icmp /data;
             sender.send(assembled);
-            usleep(1000);
+            usleep(sleep_between_ping);
         } catch(socket_write_error& ){
           // no interest yet.
         }
@@ -165,7 +170,7 @@ int main(int argc, char** argv)
         }
     }        
 
-    usleep(1000000);
+    usleep(THREADING_WAIT);
     cout << "Total send: " << pcks_send << endl;
     auto replies = pingTracer.replies();
     cout << "Received " << replies.size() << " replies" << endl;
