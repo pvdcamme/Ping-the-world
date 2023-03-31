@@ -132,15 +132,15 @@ int main(int argc, char** argv)
         in_val >> address_test_count;
     }
 
-    const size_t sleep_between_ping = size_t(1e6/ PING_RATE);
-    const size_t THREADING_WAIT = 10000000;
+    const size_t sleep_between_ping = size_t(1e6/ PING_RATE); //us
+    const size_t NETWORK_WAIT= 10000000; //us
 
     const IPv4Address local_addr = NetworkInterface(str_netif).ipv4_address();
     cout << "Sending from: " << local_addr << endl;
 
     ICMPCatcher pingTracer(str_netif);
 
-    usleep(THREADING_WAIT);
+    usleep(NETWORK_WAIT);
 
     PacketSender sender(str_netif);
     uint64_t pcks_send = 0;
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
         }
     }        
 
-    usleep(THREADING_WAIT);
+    usleep(NETWORK_WAIT);
     cout << "Total send: " << pcks_send << endl;
     auto replies = pingTracer.replies();
     cout << "Received " << replies.size() << " replies" << endl;
