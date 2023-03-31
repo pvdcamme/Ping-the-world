@@ -32,6 +32,7 @@
 #include <thread>
 #include <vector>
 #include <sstream>
+#include <atomic>
 
 #include <unistd.h>
 #include <tins/tins.h>
@@ -56,24 +57,28 @@ class ICMPCatcher
     const bool PROMISCUOUS = true;
     const std::string netDevice;
     PingMatcher pingMatch;
-
     Sniffer sniffer;
+    std::atomic_bool keepListening;
+
     std::thread thread_;
 
     /** Sends a dummy ping.
       * Unfortunately useful to stop ICMPCatcher.
       * Libpcap+libTins are blocking on new packets.
+      *
+      * (poison pill approach)
       */
     void sendDummyPing(){
         PacketSender sender(netDevice);
         IP pkt = IP("127.0.0.1") / ICMP(ICMP::ECHO_REQUEST) / RawPDU("foo");
         sender.send(pkt);
-
     }
+
 public:
     ICMPCatcher(const std::string& device):
         netDevice(device),
-        sniffer(device)
+        sniffer(device),
+        keepListening(true)
     {
         this->sniffer.set_filter("icmp");
         this->sniffer.set_timeout(1);
@@ -86,9 +91,17 @@ public:
     ICMPCatcher(const ICMPCatcher& oth) = delete;
 
     ~ICMPCatcher() {
+      stop();
+    }
+
+    void stop() {
+      bool initialVal = true;
+      if(keepListening.compare_exchange_strong(initialVal, false)) {
         sniffer.stop_sniff();
         sendDummyPing();
         thread_.join();
+      }
+
     }
     std::vector<PingMatcher::Reply> replies(){
         return pingMatch.replies();
@@ -110,7 +123,7 @@ public:
             //cout << "Received other ICMP: " << type << endl;
         }
 
-        return true;
+        return keepListening;
     }
 };
 
