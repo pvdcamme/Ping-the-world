@@ -55,6 +55,8 @@ class ICMPCatcher
 {
     const size_t MAX_PACKET_SIZE = 2048;
     const bool PROMISCUOUS = true;
+
+    const IPv4Address startAddress;
     const std::string netDevice;
     PingMatcher pingMatch;
     Sniffer sniffer;
@@ -75,7 +77,8 @@ class ICMPCatcher
     }
 
 public:
-    ICMPCatcher(const std::string& device):
+    ICMPCatcher(const std::string& device, const IPv4Address local_addr):
+        startAddress(local_addr),
         netDevice(device),
         sniffer(device),
         keepListening(true)
@@ -115,7 +118,7 @@ public:
         const Timestamp when = pkt.timestamp();
 
         auto type = icmp.type();
-        if(ICMP::ECHO_REQUEST == type){
+        if(ICMP::ECHO_REQUEST == type && ip.src_addr() == startAddress){
             pingMatch.addRequest(when, ip.dst_addr());
         }else if(ICMP::ECHO_REPLY == type){
             pingMatch.addReply(when, ip.src_addr());
@@ -152,7 +155,7 @@ int main(int argc, char** argv)
     const IPv4Address local_addr = NetworkInterface(str_netif).ipv4_address();
     cout << "Sending from: " << local_addr << endl;
 
-    ICMPCatcher pingTracer(str_netif);
+    ICMPCatcher pingTracer(str_netif, local_addr);
 
     usleep(NETWORK_WAIT);
 
