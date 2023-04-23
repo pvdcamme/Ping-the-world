@@ -144,17 +144,18 @@ void test_ping_matcher_multiple_normal(){
 void test_ipv4_random(){
     std::vector<bool>seen_addr(std::numeric_limits<uint32_t>::max());
 
-    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](uint8_t v) { return !v; }));
+    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](bool v) { return !v; }));
 
     for(uint64_t local(0); local < (uint64_t(1) << 32) ; ++local){
         IPv4Address new_addr = IPv4Address(local);
         seen_addr[new_addr] = true;
     }
 
+    assert(std::all_of(seen_addr.begin(), seen_addr.end(), [](bool v) { return v; }));
+
     for(uint64_t local(0); local < (uint64_t(1) << 32) ; ++local){
         IPv4Address new_addr = random(IPv4Address(local));
         uint32_t new_spot(new_addr);
-        assert(seen_addr[new_spot] == true);
         seen_addr[new_spot] = false;
     }
 
