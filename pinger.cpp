@@ -62,7 +62,7 @@ class ICMPCatcher
     Sniffer sniffer;
     std::atomic_bool keepListening;
 
-    std::thread thread_;
+    std::thread mSnifferLoop;
 
     /** Sends a dummy ping.
       * Unfortunately useful to stop ICMPCatcher.
@@ -85,7 +85,7 @@ public:
     {
         this->sniffer.set_filter("icmp");
         this->sniffer.set_timeout(1);
-        thread_ = std::thread( [&]() {
+        mSnifferLoop= std::thread( [&]() {
             auto member_callback = std::bind(&ICMPCatcher::handle, this, std::placeholders::_1);
             this->sniffer.sniff_loop(member_callback);
         });
@@ -102,7 +102,7 @@ public:
       if(keepListening.compare_exchange_strong(initialVal, false)) {
         sniffer.stop_sniff();
         sendDummyPing();
-        thread_.join();
+        mSnifferLoop.join();
       }
 
     }
