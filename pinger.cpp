@@ -83,8 +83,8 @@ public:
         sniffer(device),
         keepListening(true)
     {
-        this->sniffer.set_filter("icmp");
-        this->sniffer.set_timeout(1);
+        sniffer.set_filter("icmp");
+        sniffer.set_timeout(1);
         mSnifferLoop= std::thread( [&]() {
             auto member_callback = std::bind(&ICMPCatcher::handle, this, std::placeholders::_1);
             this->sniffer.sniff_loop(member_callback);
