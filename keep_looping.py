@@ -9,12 +9,20 @@ import subprocess
 
 def run_once(start_ip,count):
   collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
-  print(collected)
+  result = collected.stdout.decode("utf8")
+
+  key = "Last address: "
+  for line in result.split("\n"):
+    if key in line:
+      next_start = line[len(key):].strip()
+      return next_start, result
 
 
 if __name__ == "__main__":
   batch_size = 255
-  run_once("0.0.0.0", batch_size)
+  next_address, result = run_once("0.0.0.0", batch_size)
+  print(result)
+  print(f"Next starts at {next_address}")
 
   
 
