@@ -6,6 +6,13 @@ import os
 import sys
 import subprocess
 
+def parse_last_address(line):
+  key = "Last address: "
+  if key in line:
+    return line[len(key):].strip()
+  else:
+    return None
+
 
 def run_once(start_ip,count):
   collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
@@ -16,13 +23,12 @@ def run_once(start_ip,count):
     if key in line:
       next_start = line[len(key):].strip()
       return next_start, result
+
 def last_block(result_file):
   with open(result_file, "r") as f:
-    key = "Last address: "
     last_seen = None
     for line in f:
-      if key in line:
-        last_seen = line[len(key):].strip()
+      last_seen = parse_last_address(line) or last_seen
     return last_seen
 
 if __name__ == "__main__":
