@@ -20,9 +20,15 @@ def run_once(start_ip,count):
 
 if __name__ == "__main__":
   batch_size = 255
-  next_address, result = run_once("0.0.0.0", batch_size)
-  print(result)
-  print(f"Next starts at {next_address}")
+
+  initial_address = "0.0.0.0" 
+  next_address = initial_address
+  while True:
+    print(f"Starting at {next_address}")
+    next_address, result = run_once(next_address, batch_size)
+    with open('result.txt', 'a') as f:
+      f.write(result)
+
 
   
 
