@@ -1,3 +1,7 @@
+"""
+  The IPv4 address-space is large. This tool helps pinging by splitting up
+  the work in smaller batches.
+"""
 import os
 import sys
 import subprocess
