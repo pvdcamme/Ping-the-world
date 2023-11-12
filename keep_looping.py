@@ -19,7 +19,7 @@ def run_once(start_ip,count):
 
 
 if __name__ == "__main__":
-  batch_size = 255
+  batch_size = 256
 
   initial_address = "0.0.0.0" 
   next_address = initial_address
