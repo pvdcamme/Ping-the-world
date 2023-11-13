@@ -26,7 +26,7 @@ def search_last_address(output_lines):
     last_seen = parse_last_address(line) or last_seen
   return last_seen
 
-def save_output(output, target= "result.txt"):
+def save_output(output, target):
   with open(target, "a") as f:
     f.write(output)
 
@@ -41,13 +41,15 @@ if __name__ == "__main__":
   batch_size = 256
 
   next_address = "0.0.0.0" 
+  save_file = "result.txt"
   if len(sys.argv) > 1:
+    save_file = sys.argv[1]
     next_address = find_start(sys.argv[1], next_address)
 
   while True:
     print(f"Starting at {next_address}")
     current_result = single_run(next_address, batch_size)
     next_address = search_last_address(current_result.split("\n"))
-    save_output(current_result)
+    save_output(current_result, save_file)
 
 
