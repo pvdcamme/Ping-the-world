@@ -20,12 +20,6 @@ def single_run(start_ip,count):
   collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
   return collected.stdout.decode("utf8")
 
-
-  next_start = None
-  for line in result.split("\n"):
-    next_start = next_start or parse_last_address(line)
-  return next_start, result
-
 def last_block(result_file):
   last_seen = None
   for line in result_file:
