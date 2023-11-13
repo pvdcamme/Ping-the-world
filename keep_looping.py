@@ -44,8 +44,8 @@ if __name__ == "__main__":
   while True:
     print(f"Starting at {next_address}")
     current_result = single_run(next_address, batch_size)
-    next_address = last_block(result)
+    next_address = last_block(current_result.split("\n"))
     with open('result.txt', 'a') as f:
-      f.write(result)
+      f.write(current_result)
 
 
