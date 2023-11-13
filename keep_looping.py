@@ -20,7 +20,7 @@ def parse_last_address(line):
   else:
     return None
 
-def last_block(result_file):
+def search_last_address(result_file):
   last_seen = None
   for line in result_file:
     last_seen = parse_last_address(line) or last_seen
@@ -32,12 +32,12 @@ if __name__ == "__main__":
   next_address = "0.0.0.0" 
   if len(sys.argv) > 1:
     with open(sys.argv[1], "r") as f:
-      next_address = last_block(f)
+      next_address = search_last_address(f)
 
   while True:
     print(f"Starting at {next_address}")
     current_result = single_run(next_address, batch_size)
-    next_address = last_block(current_result.split("\n"))
+    next_address = search_last_address(current_result.split("\n"))
     with open('result.txt', 'a') as f:
       f.write(current_result)
 
