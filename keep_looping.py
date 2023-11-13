@@ -9,16 +9,16 @@ import os
 import sys
 import subprocess
 
+def single_run(start_ip,count):
+  collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
+  return collected.stdout.decode("utf8")
+
 def parse_last_address(line):
   key = "Last address: "
   if key in line:
     return line[len(key):].strip()
   else:
     return None
-
-def single_run(start_ip,count):
-  collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
-  return collected.stdout.decode("utf8")
 
 def last_block(result_file):
   last_seen = None
@@ -29,12 +29,11 @@ def last_block(result_file):
 if __name__ == "__main__":
   batch_size = 256
 
-  initial_address = "0.0.0.0" 
+  next_address = "0.0.0.0" 
   if len(sys.argv) > 1:
     with open(sys.argv[1], "r") as f:
-      initial_address = last_block(f)
+      next_address = last_block(f)
 
-  next_address = initial_address
   while True:
     print(f"Starting at {next_address}")
     current_result = single_run(next_address, batch_size)
