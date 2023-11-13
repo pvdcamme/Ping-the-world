@@ -16,16 +16,14 @@ def parse_last_address(line):
   else:
     return None
 
-
 def run_once(start_ip,count):
   collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
   result = collected.stdout.decode("utf8")
 
-  key = "Last address: "
+  next_start = None
   for line in result.split("\n"):
-    if key in line:
-      next_start = line[len(key):].strip()
-      return next_start, result
+    next_start = next_start or parse_last_address(line)
+  return next_start, result
 
 def last_block(result_file):
   with open(result_file, "r") as f:
