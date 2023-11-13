@@ -1,6 +1,9 @@
 """
   The IPv4 address-space is large. This tool helps pinging by splitting up
   the work in smaller batches.
+
+  The script will loop continuously, each batch starting from the last pinged
+  address.
 """
 import os
 import sys
@@ -33,7 +36,6 @@ def last_block(result_file):
 
 if __name__ == "__main__":
   batch_size = 256
-  
 
   initial_address = "0.0.0.0" 
   if len(sys.argv) > 1:
@@ -45,8 +47,5 @@ if __name__ == "__main__":
     next_address, result = run_once(next_address, batch_size)
     with open('result.txt', 'a') as f:
       f.write(result)
-
-
-  
 
 
