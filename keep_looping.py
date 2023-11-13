@@ -38,7 +38,7 @@ if __name__ == "__main__":
   initial_address = "0.0.0.0" 
   if len(sys.argv) > 1:
     with open(sys.argv[1], "r") as f:
-      initial_address = last_block(f.read().split("\n"))
+      initial_address = last_block(f)
 
   next_address = initial_address
   while True:
