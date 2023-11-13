@@ -14,3 +14,7 @@ Programs
 - `./pinger <start addrress> <amount of hosts to ping>`
 - `./test: no arguments runs the test-code. Best run on a slightly faster machine than raspberry pi.`
 
+Use `keep_looping.py` For most practical cases. This script splits the address space in smaller, manageable 
+batches. 
+  - `python3 keep_looping.py the_result.txt` 
+

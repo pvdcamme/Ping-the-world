@@ -3,7 +3,11 @@
   the work in smaller batches.
 
   The script will loop continuously, each batch starting from the last pinged
-  address.
+  address. 
+
+  Optionally, the results from the last run can be provided. In this case new
+  results are added to this file. This make it easy to restart a run after 
+  the previous has halted (foreseen or unforeseen).
 """
 import os
 import sys
