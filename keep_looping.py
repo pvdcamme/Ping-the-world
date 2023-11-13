@@ -16,9 +16,10 @@ def parse_last_address(line):
   else:
     return None
 
-def run_once(start_ip,count):
+def single_run(start_ip,count):
   collected = subprocess.run(["./pinger", "ens3", start_ip, str(count)], capture_output=True)
-  result = collected.stdout.decode("utf8")
+  return collected.stdout.decode("utf8")
+
 
   next_start = None
   for line in result.split("\n"):
@@ -26,23 +27,24 @@ def run_once(start_ip,count):
   return next_start, result
 
 def last_block(result_file):
-  with open(result_file, "r") as f:
-    last_seen = None
-    for line in f:
-      last_seen = parse_last_address(line) or last_seen
-    return last_seen
+  last_seen = None
+  for line in result_file:
+    last_seen = parse_last_address(line) or last_seen
+  return last_seen
 
 if __name__ == "__main__":
   batch_size = 256
 
   initial_address = "0.0.0.0" 
   if len(sys.argv) > 1:
-    initial_address = last_block(sys.argv[1])
+    with open(sys.argv[1], "r") as f:
+      initial_address = last_block(f.read().split("\n"))
 
   next_address = initial_address
   while True:
     print(f"Starting at {next_address}")
-    next_address, result = run_once(next_address, batch_size)
+    current_result = single_run(next_address, batch_size)
+    next_address = last_block(result)
     with open('result.txt', 'a') as f:
       f.write(result)
 
