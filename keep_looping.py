@@ -30,13 +30,19 @@ def save_output(output, target= "result.txt"):
   with open(target, "a") as f:
     f.write(output)
 
+def find_start(file_name, default_start = "0.0.0.0"):
+  try:
+    with open(file_name, "r") as f:
+      return search_last_address(f)
+  except FileNotFoundError:
+    return default_start
+
 if __name__ == "__main__":
   batch_size = 256
 
   next_address = "0.0.0.0" 
   if len(sys.argv) > 1:
-    with open(sys.argv[1], "r") as f:
-      next_address = search_last_address(f)
+    next_address = find_start(sys.argv[1], next_address)
 
   while True:
     print(f"Starting at {next_address}")
