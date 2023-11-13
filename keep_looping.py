@@ -51,7 +51,7 @@ if __name__ == "__main__":
     next_address = find_start(sys.argv[1], next_address)
 
   while True:
-    print(f"Starting at {next_address}")
+    print(f"Starting at {next_address}, wll save to {save_file}")
     current_result = single_run(next_address, batch_size)
     next_address = search_last_address(current_result.split("\n"))
     save_output(current_result, save_file)
