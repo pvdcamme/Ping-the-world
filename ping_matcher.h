@@ -18,8 +18,10 @@ using namespace Tins;
   * The main goal is to:
   *   -> From which address did we receive replies?
   *   -> How long did it take to receive the reply?
+  *  
+  * This happens concurrently for a decent number of inflight 
+  * requests.
   *
-  *  TODO WIP. Very simple at the moment.
   */ 
 class PingMatcher{
 public:
