@@ -46,7 +46,7 @@ using std::endl;
 
 using namespace Tins;
 
-const double PING_RATE = 10; // a sec
+const double PING_RATE = 30; // a sec
 
 /**  Catches all ICMP packts.
   *  This class is intended to process the actual packets.
@@ -183,8 +183,10 @@ int main(int argc, char** argv)
         pcks_send++;
         if(pcks_send == address_test_count){
             cout << "Last address: " <<  target_addr << endl;
+            cout << "Next address: " <<  (target_addr + 1) << endl;
             break;
         }
+
     }        
 
     usleep(NETWORK_WAIT);
